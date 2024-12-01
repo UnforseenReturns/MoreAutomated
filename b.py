@@ -1,125 +1,3 @@
-import tkinter as tk
-from tkinter import ttk
-import json
-import os
-
-# Load team data from a JSON file
-def load_team_data(file_path):
-    with open(file_path, 'r') as file:
-        data = json.load(file)
-    print("Team data loaded successfully.")
-    return data['teams']
-
-# Initialize team standings
-def initialize_standings(teams):
-    standings = {team['name']: {
-        'wins': 0,
-        'losses': 0,
-        'ties': 0,
-        'division_wins': 0,
-        'conference_wins': 0,
-        'points_scored': 0,
-        'points_allowed': 0
-    } for team in teams}
-    return standings
-
-# Update standings based on game results
-def update_standings(standings, game_result):
-    home_team = game_result['home_team']
-    away_team = game_result['away_team']
-    home_score = game_result['home_score']
-    away_score = game_result['away_score']
-
-    if home_score > away_score:
-        standings[home_team]['wins'] += 1
-        standings[away_team]['losses'] += 1
-    elif away_score > home_score:
-        standings[away_team]['wins'] += 1
-        standings[home_team]['losses'] += 1
-    else:
-        standings[home_team]['ties'] += 1
-        standings[away_team]['ties'] += 1
-
-    standings[home_team]['points_scored'] += home_score
-    standings[home_team]['points_allowed'] += away_score
-    standings[away_team]['points_scored'] += away_score
-    standings[away_team]['points_allowed'] += home_score
-
-# Function to calculate standings
-def calculate_standings(teams, standings):
-    sorted_teams = sorted(teams, key=lambda x: (
-        standings[x['name']]['wins'],
-        -standings[x['name']]['losses'],
-        standings[x['name']]['ties'],
-        standings[x['name']]['division_wins'],
-        standings[x['name']]['conference_wins'],
-        standings[x['name']]['points_scored'] - standings[x['name']]['points_allowed'],
-        standings[x['name']]['points_scored']
-    ), reverse=True)
-    return sorted_teams
-
-# Function to display standings
-def display_standings(tab, standings, teams):
-    for widget in tab.winfo_children():
-        widget.destroy()
-    sorted_teams = calculate_standings(teams, standings)
-    for idx, team in enumerate(sorted_teams, start=1):
-        tk.Label(tab, text=f"{idx}. {team['name']} (Wins: {standings[team['name']]['wins']}, Losses: {standings[team['name']]['losses']}, Ties: {standings[team['name']]['ties']})").pack()
-
-# Function to update the GUI with playoff picture
-def update_playoff_picture(tab, standings, teams):
-    for widget in tab.winfo_children():
-        widget.destroy()
-    display_playoff_picture(tab, standings, teams)
-
-# Function to display playoff picture
-def display_playoff_picture(tab, standings, teams):
-    conferences = {'NFC': [], 'AFC': []}
-    for team in teams:
-        conferences[team['conference']].append(team)
-
-    playoff_teams = {'NFC': [], 'AFC': []}
-    for conference, conference_teams in conferences.items():
-        divisions = {team['division'] for team in conference_teams}
-        division_leaders = []
-        for division in divisions:
-            division_teams = [team for team in conference_teams if team['division'] == division]
-            sorted_division_teams = sorted(division_teams, key=lambda x: (
-                standings[x['name']]['wins'],
-                -standings[x['name']]['losses'],
-                standings[x['name']]['ties'],
-                standings[x['name']]['division_wins'],
-                standings[x['name']]['conference_wins'],
-                standings[x['name']]['points_scored'] - standings[x['name']]['points_allowed'],
-                standings[x['name']]['points_scored']
-            ), reverse=True)
-            division_leaders.append(sorted_division_teams[0])
-
-        remaining_teams = [team for team in conference_teams if team not in division_leaders]
-        sorted_remaining_teams = sorted(remaining_teams, key=lambda x: (
-            standings[x['name']]['wins'],
-            -standings[x['name']]['losses'],
-            standings[x['name']]['ties'],
-            standings[x['name']]['division_wins'],
-            standings[x['name']]['conference_wins'],
-            standings[x['name']]['points_scored'] - standings[x['name']]['points_allowed'],
-            standings[x['name']]['points_scored']
-        ), reverse=True)
-        playoff_teams[conference] = division_leaders + sorted_remaining_teams[:3]
-
-    nfc_frame = ttk.Frame(tab)
-    afc_frame = ttk.Frame(tab)
-    nfc_frame.pack(side='left', fill='both', expand=True)
-    afc_frame.pack(side='right', fill='both', expand=True)
-
-    tk.Label(nfc_frame, text="NFC Playoff Picture").pack()
-    for idx, team in enumerate(playoff_teams['NFC'], start=1):
-        tk.Label(nfc_frame, text=f"{idx}. {team['name']} (Wins: {standings[team['name']]['wins']}, Losses: {standings[team['name']]['losses']}, Ties: {standings[team['name']]['ties']})").pack()
-
-    tk.Label(afc_frame, text="AFC Playoff Picture").pack()
-    for idx, team in enumerate(playoff_teams['AFC'], start=1):
-        tk.Label(afc_frame, text=f"{idx}. {team['name']} (Wins: {standings[team['name']]['wins']}, Losses: {standings[team['name']]['losses']}, Ties: {standings[team['name']]['ties']})").pack()
-
 # Function to save game session data to a file
 def save_game_data(file_path, standings, week_data):
     data_to_save = {
@@ -255,13 +133,15 @@ def create_gui(teams):
 # Function to load game data and update the GUI
 def load_game_data_with_gui(file_path, standings_tab, playoff_picture_tab, teams):
     loaded_data = load_game_data(file_path)
-    if loaded_data:
+    if loaded_data and 'standings' in loaded_data:
         global standings
         standings = loaded_data['standings']
         week_data = loaded_data['week_data']
         display_standings(standings_tab, standings, teams)
         update_playoff_picture(playoff_picture_tab, standings, teams)
         create_gui(teams)  # Recreate GUI with loaded data
+    else:
+        print("No 'standings' data found in loaded data.")
 
 # Main function
 def main():
@@ -272,7 +152,7 @@ def main():
     # Load existing game data if available
     game_data_file = 'game_data.json'
     loaded_data = load_game_data(game_data_file)
-    if loaded_data:
+    if loaded_data and 'standings' in loaded_data:
         standings = loaded_data['standings']
         week_data = loaded_data['week_data']
     else:

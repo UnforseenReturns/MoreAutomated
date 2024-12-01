@@ -1,24 +1,3 @@
-# Function to save game session data to a file
-def save_game_data(file_path, standings, week_data):
-    data_to_save = {
-        'standings': standings,
-        'week_data': week_data
-    }
-    with open(file_path, 'w') as file:
-        json.dump(data_to_save, file)
-    print("Game data saved successfully.")
-
-# Function to load game session data from a file
-def load_game_data(file_path):
-    if os.path.exists(file_path):
-        with open(file_path, 'r') as file:
-            data = json.load(file)
-        print("Game data loaded successfully.")
-        return data
-    else:
-        print("No saved game data found.")
-    return None
-
 # Function to create the GUI
 def create_gui(teams):
     root = tk.Tk()
@@ -62,8 +41,8 @@ def create_gui(teams):
         tab_control.add(tab, text=f"Week {week}")
 
         # Labels for columns
-        tk.Label(tab, text="Home Team").grid(row=0, column=0, padx=5, pady=5)
-        tk.Label(tab, text="Away Team").grid(row=0, column=1, padx=5, pady=5)
+        tk.Label(tab, text="Away Team").grid(row=0, column=0, padx=5, pady=5)
+        tk.Label(tab, text="Home Team").grid(row=0, column=1, padx=5, pady=5)
         tk.Label(tab, text="Result").grid(row=0, column=2, padx=5, pady=5)
 
         week_data[week] = [{} for _ in range(16)]  # Initialize week data
@@ -74,23 +53,23 @@ def create_gui(teams):
             result_var = tk.StringVar()
 
             # Create Combobox with team acronyms for autocomplete
-            home_team_menu = ttk.Combobox(tab, textvariable=home_team_var, values=team_acronyms)
-            home_team_menu.grid(row=game + 1, column=0, padx=5, pady=5)
-            home_team_menu.bind('<FocusOut>', lambda e, c=home_team_menu: autocomplete(e, c, team_names))
-
             away_team_menu = ttk.Combobox(tab, textvariable=away_team_var, values=team_acronyms)
-            away_team_menu.grid(row=game + 1, column=1, padx=5, pady=5)
+            away_team_menu.grid(row=game + 1, column=0, padx=5, pady=5)
             away_team_menu.bind('<FocusOut>', lambda e, c=away_team_menu: autocomplete(e, c, team_names))
+
+            home_team_menu = ttk.Combobox(tab, textvariable=home_team_var, values=team_acronyms)
+            home_team_menu.grid(row=game + 1, column=1, padx=5, pady=5)
+            home_team_menu.bind('<FocusOut>', lambda e, c=home_team_menu: autocomplete(e, c, team_names))
 
             result_menu = ttk.Combobox(tab, textvariable=result_var)
             result_menu['values'] = ["Home Win", "Away Win", "Tie"]
             result_menu.grid(row=game + 1, column=2, padx=5, pady=5)
 
             # Load saved data into dropdowns
-            if 'home_team' in week_data[week][game]:
-                home_team_var.set(week_data[week][game]['home_team'])
             if 'away_team' in week_data[week][game]:
                 away_team_var.set(week_data[week][game]['away_team'])
+            if 'home_team' in week_data[week][game]:
+                home_team_var.set(week_data[week][game]['home_team'])
             if 'result' in week_data[week][game]:
                 result_var.set(week_data[week][game]['result'])
 
@@ -129,35 +108,3 @@ def create_gui(teams):
 
     tab_control.pack(expand=1, fill='both')
     root.mainloop()
-
-# Function to load game data and update the GUI
-def load_game_data_with_gui(file_path, standings_tab, playoff_picture_tab, teams):
-    loaded_data = load_game_data(file_path)
-    if loaded_data:
-        global standings
-        standings = loaded_data['standings']
-        week_data = loaded_data['week_data']
-        display_standings(standings_tab, standings, teams)
-        update_playoff_picture(playoff_picture_tab, standings, teams)
-        create_gui(teams)  # Recreate GUI with loaded data
-
-# Main function
-def main():
-    team_data_file = 'team_data.json'  # Ensure this path is correct
-    global standings
-    teams = load_team_data(team_data_file)
-
-    # Load existing game data if available
-    game_data_file = 'game_data.json'
-    loaded_data = load_game_data(game_data_file)
-    if loaded_data:
-        standings = loaded_data['standings']
-        week_data = loaded_data['week_data']
-    else:
-        standings = initialize_standings(teams)
-        week_data = {week: [{} for _ in range(16)] for week in range(1, 18)}
-
-    create_gui(teams)
-
-if __name__ == "__main__":
-    main()
