@@ -7,6 +7,7 @@ import os
 def load_team_data(file_path):
     with open(file_path, 'r') as file:
         data = json.load(file)
+    print("Team data loaded successfully.")
     return data['teams']
 
 # Initialize team standings
@@ -123,12 +124,17 @@ def display_playoff_picture(tab, standings, teams):
 def save_game_data(file_path, standings):
     with open(file_path, 'w') as file:
         json.dump(standings, file)
+    print("Game data saved successfully.")
 
 # Function to load game session data from a file
 def load_game_data(file_path):
     if os.path.exists(file_path):
         with open(file_path, 'r') as file:
-            return json.load(file)
+            data = json.load(file)
+        print("Game data loaded successfully.")
+        return data
+    else:
+        print("No saved game data found.")
     return None
 
 # Function to create the GUI
@@ -206,6 +212,10 @@ def create_gui(teams):
     # Add "Save Game Data" button
     save_button = ttk.Button(tab_frame, text="Save Game Data", command=lambda: save_game_data('game_data.json', standings))
     save_button.grid(row=8, columnspan=4, padx=5, pady=5)
+
+    # Add "Load Game Data" button
+    load_button = ttk.Button(tab_frame, text="Load Game Data", command=lambda: load_game_data('game_data.json'))
+    load_button.grid(row=9, columnspan=4, padx=5, pady=5)
 
     tab_control.pack(expand=1, fill='both')
     root.mainloop()
