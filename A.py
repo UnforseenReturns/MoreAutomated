@@ -27,7 +27,7 @@ def update_standings(standings, game_result):
     away_team = game_result['away_team']
     home_score = game_result['home_score']
     away_score = game_result['away_score']
-    
+
     if home_score > away_score:
         standings[home_team]['wins'] += 1
         standings[away_team]['losses'] += 1
@@ -37,7 +37,7 @@ def update_standings(standings, game_result):
     else:
         standings[home_team]['ties'] += 1
         standings[away_team]['ties'] += 1
-    
+
     standings[home_team]['points_scored'] += home_score
     standings[home_team]['points_allowed'] += away_score
     standings[away_team]['points_scored'] += away_score
@@ -58,8 +58,17 @@ def create_gui(teams):
         if entry in team_names:
             combobox.set(team_names[entry])
 
+    # Create a frame to hold the tabs
+    tab_frame = tk.Frame(root)
+    tab_frame.pack(side='top', fill='x')
+
+    # Create a grid layout for the tabs
     for week in range(1, 18):
         tab = ttk.Frame(tab_control)
+        row = (week - 1) // 4
+        col = (week - 1) % 4
+        tab_button = ttk.Button(tab_frame, text=f"Week {week}", command=lambda t=tab: tab_control.select(t))
+        tab_button.grid(row=row, column=col, padx=5, pady=5)
         tab_control.add(tab, text=f"Week {week}")
 
         # Labels for columns
@@ -86,7 +95,6 @@ def create_gui(teams):
             result_menu.grid(row=game + 1, column=2, padx=5, pady=5)
 
     tab_control.pack(expand=1, fill='both')
-
     root.mainloop()
 
 # Main function
@@ -94,7 +102,7 @@ def main():
     team_data_file = 'team_data.json'  # Ensure this path is correct
     teams = load_team_data(team_data_file)
     standings = initialize_standings(teams)
-    
+
     create_gui(teams)
 
 if __name__ == "__main__":
