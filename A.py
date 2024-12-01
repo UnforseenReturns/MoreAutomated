@@ -1,3 +1,5 @@
+import tkinter as tk
+from tkinter import ttk
 import json
 
 # Load team data from a JSON file
@@ -41,22 +43,50 @@ def update_standings(standings, game_result):
     standings[away_team]['points_scored'] += away_score
     standings[away_team]['points_allowed'] += home_score
 
-# Main function to simulate and update standings
+# Function to create the GUI
+def create_gui(teams):
+    root = tk.Tk()
+    root.title("NFL Playoff Machine")
+
+    tab_control = ttk.Notebook(root)
+
+    for week in range(1, 18):
+        tab = ttk.Frame(tab_control)
+        tab_control.add(tab, text=f"Week {week}")
+
+        # Labels for columns
+        tk.Label(tab, text="Home Team").grid(row=0, column=0, padx=5, pady=5)
+        tk.Label(tab, text="Away Team").grid(row=0, column=1, padx=5, pady=5)
+        tk.Label(tab, text="Result").grid(row=0, column=2, padx=5, pady=5)
+
+        for game in range(16):
+            home_team_var = tk.StringVar()
+            away_team_var = tk.StringVar()
+            result_var = tk.StringVar()
+
+            home_team_menu = ttk.Combobox(tab, textvariable=home_team_var)
+            home_team_menu['values'] = [team['name'] for team in teams]
+            home_team_menu.grid(row=game + 1, column=0, padx=5, pady=5)
+
+            away_team_menu = ttk.Combobox(tab, textvariable=away_team_var)
+            away_team_menu['values'] = [team['name'] for team in teams]
+            away_team_menu.grid(row=game + 1, column=1, padx=5, pady=5)
+
+            result_menu = ttk.Combobox(tab, textvariable=result_var)
+            result_menu['values'] = ["Home Win", "Away Win", "Tie"]
+            result_menu.grid(row=game + 1, column=2, padx=5, pady=5)
+
+    tab_control.pack(expand=1, fill='both')
+
+    root.mainloop()
+
+# Main function
 def main():
     team_data_file = 'team_data.json'  # Ensure this path is correct
     teams = load_team_data(team_data_file)
     standings = initialize_standings(teams)
     
-    # Example game result
-    game_result = {
-        'home_team': 'Baltimore Ravens',
-        'away_team': 'Pittsburgh Steelers',
-        'home_score': 24,
-        'away_score': 17
-    }
-    
-    update_standings(standings, game_result)
-    print(standings)
+    create_gui(teams)
 
 if __name__ == "__main__":
     main()
