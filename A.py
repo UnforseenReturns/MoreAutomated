@@ -58,16 +58,22 @@ def create_gui(teams):
         if entry in team_names:
             combobox.set(team_names[entry])
 
+    # Create a frame to hold the navigation buttons
+    button_frame = tk.Frame(root)
+    button_frame.pack(side='top', fill='x')
+
     # Create a frame to hold the tabs
     tab_frame = tk.Frame(root)
-    tab_frame.pack(side='top', fill='x')
+    tab_frame.pack(expand=1, fill='both')
 
-    # Create a grid layout for the tabs
+    tab_control.pack_forget()  # Hide the tabs
+
+    # Create a grid layout for the buttons
     for week in range(1, 18):
         tab = ttk.Frame(tab_control)
         row = (week - 1) // 4
         col = (week - 1) % 4
-        tab_button = ttk.Button(tab_frame, text=f"Week {week}", command=lambda t=tab: tab_control.select(t))
+        tab_button = ttk.Button(button_frame, text=f"Week {week}", command=lambda t=tab: tab_control.select(t))
         tab_button.grid(row=row, column=col, padx=5, pady=5)
         tab_control.add(tab, text=f"Week {week}")
 
@@ -94,7 +100,7 @@ def create_gui(teams):
             result_menu['values'] = ["Home Win", "Away Win", "Tie"]
             result_menu.grid(row=game + 1, column=2, padx=5, pady=5)
 
-    tab_control.pack(expand=1, fill='both')
+    tab_control.pack(in_=tab_frame, expand=1, fill='both')
     root.mainloop()
 
 # Main function
