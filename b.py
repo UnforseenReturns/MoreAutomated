@@ -217,6 +217,10 @@ def create_gui(teams):
     load_button = ttk.Button(tab_frame, text="Load Game Data", command=lambda: load_game_data('game_data.json'))
     load_button.grid(row=9, columnspan=4, padx=5, pady=5)
 
+    # Add "Clear Data" button
+    clear_button = ttk.Button(tab_frame, text="Clear Data", command=lambda: clear_data(teams))
+    clear_button.grid(row=10, columnspan=4, padx=5, pady=5)
+
     tab_control.pack(expand=1, fill='both')
     root.mainloop()
 
@@ -240,6 +244,12 @@ def record_game_result(home_team_var, away_team_var, result_var):
 def update_all(standings_tab, playoff_picture_tab, standings, teams):
     display_standings(standings_tab, standings, teams)
     update_playoff_picture(playoff_picture_tab, standings, teams)
+
+# Function to clear all data
+def clear_data(teams):
+    global standings
+    standings = initialize_standings(teams)
+    print("All data cleared.")
 
 # Main function
 def main():
