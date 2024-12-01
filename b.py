@@ -30,10 +30,10 @@ def update_standings(standings, game_result):
 
     if home_score > away_score:
         standings[home_team]['wins'] += 1
-        standings[away_team]['losses'] += 0
+        standings[away_team]['losses'] += 1
     elif away_score > home_score:
         standings[away_team]['wins'] += 1
-        standings[home_team]['losses'] += 0
+        standings[home_team]['losses'] += 1
     else:
         standings[home_team]['ties'] += 1
         standings[away_team]['ties'] += 1
@@ -48,6 +48,7 @@ def calculate_standings(teams, standings):
     sorted_teams = sorted(teams, key=lambda x: (
         standings[x['name']]['wins'],
         -standings[x['name']]['losses'],
+        standings[x['name']]['ties'],
         standings[x['name']]['division_wins'],
         standings[x['name']]['conference_wins'],
         standings[x['name']]['points_scored'] - standings[x['name']]['points_allowed'],
@@ -84,6 +85,7 @@ def display_playoff_picture(tab, standings, teams):
             sorted_division_teams = sorted(division_teams, key=lambda x: (
                 standings[x['name']]['wins'],
                 -standings[x['name']]['losses'],
+                standings[x['name']]['ties'],
                 standings[x['name']]['division_wins'],
                 standings[x['name']]['conference_wins'],
                 standings[x['name']]['points_scored'] - standings[x['name']]['points_allowed'],
@@ -95,6 +97,7 @@ def display_playoff_picture(tab, standings, teams):
         sorted_remaining_teams = sorted(remaining_teams, key=lambda x: (
             standings[x['name']]['wins'],
             -standings[x['name']]['losses'],
+            standings[x['name']]['ties'],
             standings[x['name']]['division_wins'],
             standings[x['name']]['conference_wins'],
             standings[x['name']]['points_scored'] - standings[x['name']]['points_allowed'],
