@@ -3,8 +3,8 @@ import json
 # Load team data from a JSON file
 def load_team_data(file_path):
     with open(file_path, 'r') as file:
-        teams = json.load(file)
-    return teams
+        data = json.load(file)
+    return data['teams']
 
 # Initialize team standings
 def initialize_standings(teams):
@@ -49,8 +49,8 @@ def main():
     
     # Example game result
     game_result = {
-        'home_team': 'Arizona Cardinals',
-        'away_team': 'Atlanta Falcons',
+        'home_team': 'Baltimore Ravens',
+        'away_team': 'Pittsburgh Steelers',
         'home_score': 24,
         'away_score': 17
     }
