@@ -50,6 +50,14 @@ def create_gui(teams):
 
     tab_control = ttk.Notebook(root)
 
+    team_acronyms = [team['abbreviation'] for team in teams]
+    team_names = {team['abbreviation']: team['name'] for team in teams}
+
+    def autocomplete(event, combobox, team_names):
+        entry = combobox.get().upper()
+        if entry in team_names:
+            combobox.set(team_names[entry])
+
     for week in range(1, 18):
         tab = ttk.Frame(tab_control)
         tab_control.add(tab, text=f"Week {week}")
@@ -64,13 +72,14 @@ def create_gui(teams):
             away_team_var = tk.StringVar()
             result_var = tk.StringVar()
 
-            home_team_menu = ttk.Combobox(tab, textvariable=home_team_var)
-            home_team_menu['values'] = [team['name'] for team in teams]
+            # Create Combobox with team acronyms for autocomplete
+            home_team_menu = ttk.Combobox(tab, textvariable=home_team_var, values=team_acronyms)
             home_team_menu.grid(row=game + 1, column=0, padx=5, pady=5)
+            home_team_menu.bind('<FocusOut>', lambda e, c=home_team_menu: autocomplete(e, c, team_names))
 
-            away_team_menu = ttk.Combobox(tab, textvariable=away_team_var)
-            away_team_menu['values'] = [team['name'] for team in teams]
+            away_team_menu = ttk.Combobox(tab, textvariable=away_team_var, values=team_acronyms)
             away_team_menu.grid(row=game + 1, column=1, padx=5, pady=5)
+            away_team_menu.bind('<FocusOut>', lambda e, c=away_team_menu: autocomplete(e, c, team_names))
 
             result_menu = ttk.Combobox(tab, textvariable=result_var)
             result_menu['values'] = ["Home Win", "Away Win", "Tie"]
