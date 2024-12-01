@@ -30,10 +30,10 @@ def update_standings(standings, game_result):
 
     if home_score > away_score:
         standings[home_team]['wins'] += 1
-        standings[away_team]['losses'] += 1
+        standings[away_team]['losses'] += 0
     elif away_score > home_score:
         standings[away_team]['wins'] += 1
-        standings[home_team]['losses'] += 1
+        standings[home_team]['losses'] += 0
     else:
         standings[home_team]['ties'] += 1
         standings[away_team]['ties'] += 1
@@ -46,10 +46,10 @@ def update_standings(standings, game_result):
 # Function to calculate standings
 def calculate_standings(teams, standings):
     sorted_teams = sorted(teams, key=lambda x: (
-        standings[x['name']]['wins'], 
-        -standings[x['name']]['losses'], 
-        standings[x['name']]['division_wins'], 
-        standings[x['name']]['conference_wins'], 
+        standings[x['name']]['wins'],
+        -standings[x['name']]['losses'],
+        standings[x['name']]['division_wins'],
+        standings[x['name']]['conference_wins'],
         standings[x['name']]['points_scored'] - standings[x['name']]['points_allowed'],
         standings[x['name']]['points_scored']
     ), reverse=True)
@@ -57,16 +57,63 @@ def calculate_standings(teams, standings):
 
 # Function to display standings
 def display_standings(tab, standings, teams):
+    for widget in tab.winfo_children():
+        widget.destroy()
     sorted_teams = calculate_standings(teams, standings)
     for idx, team in enumerate(sorted_teams, start=1):
         tk.Label(tab, text=f"{idx}. {team['name']} (Wins: {standings[team['name']]['wins']}, Losses: {standings[team['name']]['losses']}, Ties: {standings[team['name']]['ties']})").pack()
 
 # Function to update the GUI with playoff picture
-def update_playoff_picture(tab_control, standings, teams):
-    playoff_tab = ttk.Frame(tab_control)
-    tab_control.add(playoff_tab, text="Playoff Picture")
-    display_standings(playoff_tab, standings, teams)
-    tab_control.select(playoff_tab)
+def update_playoff_picture(tab, standings, teams):
+    for widget in tab.winfo_children():
+        widget.destroy()
+    display_playoff_picture(tab, standings, teams)
+
+# Function to display playoff picture
+def display_playoff_picture(tab, standings, teams):
+    conferences = {'NFC': [], 'AFC': []}
+    for team in teams:
+        conferences[team['conference']].append(team)
+
+    playoff_teams = {'NFC': [], 'AFC': []}
+    for conference, conference_teams in conferences.items():
+        divisions = {team['division'] for team in conference_teams}
+        division_leaders = []
+        for division in divisions:
+            division_teams = [team for team in conference_teams if team['division'] == division]
+            sorted_division_teams = sorted(division_teams, key=lambda x: (
+                standings[x['name']]['wins'],
+                -standings[x['name']]['losses'],
+                standings[x['name']]['division_wins'],
+                standings[x['name']]['conference_wins'],
+                standings[x['name']]['points_scored'] - standings[x['name']]['points_allowed'],
+                standings[x['name']]['points_scored']
+            ), reverse=True)
+            division_leaders.append(sorted_division_teams[0])
+
+        remaining_teams = [team for team in conference_teams if team not in division_leaders]
+        sorted_remaining_teams = sorted(remaining_teams, key=lambda x: (
+            standings[x['name']]['wins'],
+            -standings[x['name']]['losses'],
+            standings[x['name']]['division_wins'],
+            standings[x['name']]['conference_wins'],
+            standings[x['name']]['points_scored'] - standings[x['name']]['points_allowed'],
+            standings[x['name']]['points_scored']
+        ), reverse=True)
+        playoff_teams[conference] = division_leaders + sorted_remaining_teams[:3]
+
+    nfc_frame = ttk.Frame(tab)
+    afc_frame = ttk.Frame(tab)
+    nfc_frame.pack(side='left', fill='both', expand=True)
+    afc_frame.pack(side='right', fill='both', expand=True)
+
+    tk.Label(nfc_frame, text="NFC Playoff Picture").pack()
+    for idx, team in enumerate(playoff_teams['NFC'], start=1):
+        tk.Label(nfc_frame, text=f"{idx}. {team['name']} (Wins: {standings[team['name']]['wins']}, Losses: {standings[team['name']]['losses']}, Ties: {standings[team['name']]['ties']})").pack()
+
+    tk.Label(afc_frame, text="AFC Playoff Picture").pack()
+    for idx, team in enumerate(playoff_teams['AFC'], start=1):
+        tk.Label(afc_frame, text=f"{idx}. {team['name']} (Wins: {standings[team['name']]['wins']}, Losses: {standings[team['name']]['losses']}, Ties: {standings[team['name']]['ties']})").pack()
 
 # Function to create the GUI
 def create_gui(teams):
@@ -119,12 +166,50 @@ def create_gui(teams):
             result_menu['values'] = ["Home Win", "Away Win", "Tie"]
             result_menu.grid(row=game + 1, column=2, padx=5, pady=5)
 
+            # Update standings when result is selected
+            result_menu.bind('<<ComboboxSelected>>', lambda e, h=home_team_var, a=away_team_var, r=result_var: record_game_result(h, a, r))
+
+    # Add Standings and Playoff Picture tabs
+    standings_tab = ttk.Frame(tab_control)
+    playoff_picture_tab = ttk.Frame(tab_control)
+    tab_control.add(standings_tab, text="Standings")
+    tab_control.add(playoff_picture_tab, text="Playoff Picture")
+
     # Add "Show Standings" button
-    show_standings_button = ttk.Button(tab_frame, text="Show Standings", command=lambda: update_playoff_picture(tab_control, standings, teams))
+    show_standings_button = ttk.Button(tab_frame, text="Show Standings", command=lambda: display_standings(standings_tab, standings, teams))
     show_standings_button.grid(row=5, columnspan=4, padx=5, pady=5)
+
+    # Add "Show Playoff Picture" button
+    show_playoff_picture_button = ttk.Button(tab_frame, text="Show Playoff Picture", command=lambda: update_playoff_picture(playoff_picture_tab, standings, teams))
+    show_playoff_picture_button.grid(row=6, columnspan=4, padx=5, pady=5)
+
+    # Add "Update Standings and Playoff Picture" button
+    update_button = ttk.Button(tab_frame, text="Update Standings and Playoff Picture", command=lambda: update_all(standings_tab, playoff_picture_tab, standings, teams))
+    update_button.grid(row=7, columnspan=4, padx=5, pady=5)
 
     tab_control.pack(expand=1, fill='both')
     root.mainloop()
+
+# Function to record game results and update standings
+def record_game_result(home_team_var, away_team_var, result_var):
+    home_team = home_team_var.get()
+    away_team = away_team_var.get()
+    result = result_var.get()
+    if home_team and away_team and result:
+        home_score = 1 if result == "Home Win" else 0
+        away_score = 1 if result == "Away Win" else 0
+        game_result = {
+            'home_team': home_team,
+            'away_team': away_team,
+            'home_score': home_score,
+            'away_score': away_score
+        }
+        update_standings(standings, game_result)
+
+# Function to update both standings and playoff picture
+def update_all(standings_tab, playoff_picture_tab, standings, teams):
+    display_standings(standings_tab, standings, teams)
+    update_playoff_picture(playoff_picture_tab, standings, teams)
 
 # Main function
 def main():
