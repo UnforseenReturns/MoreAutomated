@@ -43,6 +43,31 @@ def update_standings(standings, game_result):
     standings[away_team]['points_scored'] += away_score
     standings[away_team]['points_allowed'] += home_score
 
+# Function to calculate standings
+def calculate_standings(teams, standings):
+    sorted_teams = sorted(teams, key=lambda x: (
+        standings[x['name']]['wins'], 
+        -standings[x['name']]['losses'], 
+        standings[x['name']]['division_wins'], 
+        standings[x['name']]['conference_wins'], 
+        standings[x['name']]['points_scored'] - standings[x['name']]['points_allowed'],
+        standings[x['name']]['points_scored']
+    ), reverse=True)
+    return sorted_teams
+
+# Function to display standings
+def display_standings(tab, standings, teams):
+    sorted_teams = calculate_standings(teams, standings)
+    for idx, team in enumerate(sorted_teams, start=1):
+        tk.Label(tab, text=f"{idx}. {team['name']} (Wins: {standings[team['name']]['wins']}, Losses: {standings[team['name']]['losses']}, Ties: {standings[team['name']]['ties']})").pack()
+
+# Function to update the GUI with playoff picture
+def update_playoff_picture(tab_control, standings, teams):
+    playoff_tab = ttk.Frame(tab_control)
+    tab_control.add(playoff_tab, text="Playoff Picture")
+    display_standings(playoff_tab, standings, teams)
+    tab_control.select(playoff_tab)
+
 # Function to create the GUI
 def create_gui(teams):
     root = tk.Tk()
@@ -94,6 +119,10 @@ def create_gui(teams):
             result_menu['values'] = ["Home Win", "Away Win", "Tie"]
             result_menu.grid(row=game + 1, column=2, padx=5, pady=5)
 
+    # Add "Show Standings" button
+    show_standings_button = ttk.Button(tab_frame, text="Show Standings", command=lambda: update_playoff_picture(tab_control, standings, teams))
+    show_standings_button.grid(row=5, columnspan=4, padx=5, pady=5)
+
     tab_control.pack(expand=1, fill='both')
     root.mainloop()
 
@@ -101,6 +130,7 @@ def create_gui(teams):
 def main():
     team_data_file = 'team_data.json'  # Ensure this path is correct
     teams = load_team_data(team_data_file)
+    global standings
     standings = initialize_standings(teams)
 
     create_gui(teams)
