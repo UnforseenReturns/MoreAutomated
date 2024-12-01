@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 import json
+import os
 
 # Load team data from a JSON file
 def load_team_data(file_path):
@@ -118,6 +119,18 @@ def display_playoff_picture(tab, standings, teams):
     for idx, team in enumerate(playoff_teams['AFC'], start=1):
         tk.Label(afc_frame, text=f"{idx}. {team['name']} (Wins: {standings[team['name']]['wins']}, Losses: {standings[team['name']]['losses']}, Ties: {standings[team['name']]['ties']})").pack()
 
+# Function to save game session data to a file
+def save_game_data(file_path, standings):
+    with open(file_path, 'w') as file:
+        json.dump(standings, file)
+
+# Function to load game session data from a file
+def load_game_data(file_path):
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as file:
+            return json.load(file)
+    return None
+
 # Function to create the GUI
 def create_gui(teams):
     root = tk.Tk()
@@ -190,6 +203,10 @@ def create_gui(teams):
     update_button = ttk.Button(tab_frame, text="Update Standings and Playoff Picture", command=lambda: update_all(standings_tab, playoff_picture_tab, standings, teams))
     update_button.grid(row=7, columnspan=4, padx=5, pady=5)
 
+    # Add "Save Game Data" button
+    save_button = ttk.Button(tab_frame, text="Save Game Data", command=lambda: save_game_data('game_data.json', standings))
+    save_button.grid(row=8, columnspan=4, padx=5, pady=5)
+
     tab_control.pack(expand=1, fill='both')
     root.mainloop()
 
@@ -217,9 +234,16 @@ def update_all(standings_tab, playoff_picture_tab, standings, teams):
 # Main function
 def main():
     team_data_file = 'team_data.json'  # Ensure this path is correct
-    teams = load_team_data(team_data_file)
     global standings
-    standings = initialize_standings(teams)
+    teams = load_team_data(team_data_file)
+
+    # Load existing game data if available
+    game_data_file = 'game_data.json'
+    loaded_standings = load_game_data(game_data_file)
+    if loaded_standings:
+        standings = loaded_standings
+    else:
+        standings = initialize_standings(teams)
 
     create_gui(teams)
 
