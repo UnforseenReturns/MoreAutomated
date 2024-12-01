@@ -1,5 +1,4 @@
 import json
-import os
 
 # Load team data from a JSON file
 def load_team_data(file_path):
@@ -44,14 +43,14 @@ def update_standings(standings, game_result):
 
 # Main function to simulate and update standings
 def main():
-    team_data_file = 'path/to/team_data.json'
+    team_data_file = 'team_data.json'  # Ensure this path is correct
     teams = load_team_data(team_data_file)
     standings = initialize_standings(teams)
     
     # Example game result
     game_result = {
-        'home_team': 'Team A',
-        'away_team': 'Team B',
+        'home_team': 'Arizona Cardinals',
+        'away_team': 'Atlanta Falcons',
         'home_score': 24,
         'away_score': 17
     }
